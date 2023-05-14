@@ -1,0 +1,11 @@
+<?php
+
+const SOCKET_DOMAIN   = AF_UNIX;
+const SOCKET_TYPE     = SOCK_STREAM;
+const SOCKET_PROTOCOL = 0;
+const SOCKET_ADDRESS  = __DIR__ . "/easyCacheService.sock";
+const SOCKET_PORT     = null;
+const SOCKET_MAX_READ_LENGTH = 2 ** 16;
+
+const CACHE_STORAGE_DIR  = __DIR__ . "/src/storage/cache";
+const CACHE_EXPIRES_JSON = __DIR__ . "/src/storage/expires.json";

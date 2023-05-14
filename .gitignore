@@ -1,0 +1,6 @@
+src/storage/*
+vendor/
+composer.lock
+config.php
+easyCacheService.sock
+.idea/
