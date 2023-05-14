@@ -1,6 +1,8 @@
-src/storage/*
+src/storage/cache/*
+src/storage/expires.json
 vendor/
 composer.lock
 config.php
 easyCacheService.sock
 .idea/
+.git/
