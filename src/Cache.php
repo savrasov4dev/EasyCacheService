@@ -4,6 +4,19 @@ namespace App;
 
 class Cache implements CacheI
 {
+    public static function convertDataFromStorageToCacheData(StorageI $storage): array
+    {
+        $cache = [];
+
+        foreach ($storage->getAllCache() as $storageData) {
+            [$key, $cacheJSON] = $storageData;
+            ['data' => $data, 'expire' => $expire] = json_decode($cacheJSON, true);
+
+            $cache[$key] = ['data' => $data, 'expire' => $expire];
+        }
+
+        return $cache;
+    }
     public function __construct(
         private array $cache,
         private array $expires
@@ -11,7 +24,7 @@ class Cache implements CacheI
     
     public function get(string $key): string
     {
-        return $this->cache[$key]['data'] ?? '';
+        return json_encode($this->cache[$key] ?? '');
     }
 
     public function set(string $key, string $data, ?int $expire = null): array
@@ -94,12 +107,12 @@ class Cache implements CacheI
 
     private function defineStateAndOldExpire(?int $expire, string $key): array
     {
-        $state = 0;
         $oldExpire = null;
 
         if (isset($this->cache[$key])) {
 
             $oldExpire = $this->cache[$key]['expire'];
+            $state     = 0;
 
             if (is_int($oldExpire) && $expire === null) {
                 $state = 1;
@@ -124,7 +137,12 @@ class Cache implements CacheI
         $newExpire = time() + $expire;
 
         $this->cache[$cacheKey]['expire'] = $newExpire;
-        $this->expires[$newExpire][]      = $cacheKey;
+
+        if (!isset($this->expires[$newExpire])) {
+            $this->expires[$newExpire] = [];
+        }
+
+        $this->expires[$newExpire][] = $cacheKey;
     }
 
     private function deleteFromExpires(int $expired, string $cacheKey): void

@@ -7,16 +7,9 @@ use App\Storage;
 require_once __DIR__ . "/vendor/autoload.php";
 require_once __DIR__ . "/config.php";
 
-$storage   = new Storage(CACHE_STORAGE_DIR, CACHE_EXPIRES_JSON);
-$expires   = json_decode($storage->getExpiresJsonFile(), true);
-$cacheData = [];
-
-foreach ($storage->getAllCache() as $cache) {
-    [$key, $data]    = $cache;
-    $cacheData[$key] = $data;
-}
-
-$cache = new Cache($cacheData, $expires);
+$storage = new Storage(CACHE_STORAGE_DIR, CACHE_EXPIRES_JSON);
+$expires = json_decode($storage->getExpiresJsonFile(), true);
+$cache   = new Cache(Cache::convertDataFromStorageToCacheData($storage), $expires);
 
 [$deletedCacheKeyList, $expires] = $cache->deleteExpiredCache($cache->findExpired());
 

@@ -84,11 +84,11 @@ class Service
 
             switch ($method) {
                 case 'get':
-                    $response = json_encode($cache->get($key));
+                    $response = $cache->get($key);
                     break;
                 case 'set':
                     $expires = $cache->set($key, $data, $expire);
-                    $storage->putCache($key, $data);
+                    $storage->putCache($key, $cache->get($key));
                     $storage->putExpiresJSON(json_encode($expires));
                     $response = 'OK';
                     break;
