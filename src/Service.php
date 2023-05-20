@@ -8,12 +8,14 @@ class Service
 {
     private Socket $socket;
     public function __construct(
-        private readonly int     $domain,
-        private readonly int     $type,
-        private readonly int     $protocol,
-        private readonly string  $address,
-        private readonly ?string $port,
-        private readonly int     $maxReadLength,
+        private readonly int      $domain,
+        private readonly int      $type,
+        private readonly int      $protocol,
+        private readonly string   $address,
+        private readonly ?string  $port,
+        private readonly int      $maxReadLength,
+        private readonly CacheI   $cache,
+        private readonly StorageI $storage,
     )
     {
         extension_loaded('sockets') OR die("The sockets extension is not loaded.\n");
@@ -41,7 +43,7 @@ class Service
         $this->socket = $socket;
     }
 
-    public function run(StorageI $storage, CacheI $cache): void
+    public function run(): void
     {
         $previousIterationTime = time();
 
@@ -53,12 +55,12 @@ class Service
 
                 $nonCheckedTime = range($previousIterationTime, $currentTime);
 
-                [$deletedCacheKeyList, $expires] = $cache->deleteExpiredCache(
-                    $cache->findExpiredFromNonCheckedTime($nonCheckedTime)
+                [$deletedCacheKeyList, $expires] = $this->cache->deleteExpiredCache(
+                    $this->cache->findExpiredFromNonCheckedTime($nonCheckedTime)
                 );
 
-                $storage->deleteCache($deletedCacheKeyList);
-                $storage->putExpiresJSON(json_encode($expires));
+                $this->storage->deleteCache($deletedCacheKeyList);
+                $this->storage->putExpiresJSON(json_encode($expires));
 
                 $previousIterationTime = $currentTime;
             }
@@ -78,20 +80,11 @@ class Service
 
             ['method' => $method, 'key' => $key, 'data' => $data, 'expire' => $expire] = json_decode($request, true);
 
-            $response = '';
-
             $key      = md5($key);
+            $response = "Method '$method' not found!";
 
-            switch ($method) {
-                case 'get':
-                    $response = $cache->get($key);
-                    break;
-                case 'set':
-                    $expires = $cache->set($key, $data, $expire);
-                    $storage->putCache($key, $cache->get($key));
-                    $storage->putExpiresJSON(json_encode($expires));
-                    $response = 'OK';
-                    break;
+            if (method_exists($this, $method)) {
+                $response = $this->$method($key, $data, $expire);
             }
 
             $length = strlen($response);
@@ -117,6 +110,20 @@ class Service
         socket_close($this->socket);
 
         echo $error;
+    }
+
+    private function get(string $key): string
+    {
+        return $this->cache->get($key);
+    }
+
+    private function set(string $key, string $data, ?int $expire): string
+    {
+        $expires = $this->cache->set($key, $data, $expire);
+        $this->storage->putCache($key, $this->cache->get($key));
+        $this->storage->putExpiresJSON(json_encode($expires));
+
+        return 'OK';
     }
 
     private function getError(Socket $socket, string $text): string

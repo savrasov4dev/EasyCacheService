@@ -22,7 +22,9 @@ $service = new Service(
     SOCKET_PROTOCOL,
     SOCKET_ADDRESS,
     SOCKET_PORT,
-    SOCKET_MAX_READ_LENGTH
+    SOCKET_MAX_READ_LENGTH,
+    $cache,
+    $storage
 );
 
-$service->run($storage, $cache);
+$service->run();
