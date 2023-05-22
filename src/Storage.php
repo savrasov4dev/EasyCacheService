@@ -2,11 +2,11 @@
 
 namespace App;
 
-class Storage implements StorageI
+readonly class Storage
 {
     public function __construct(
-        private readonly string $cacheDir,
-        private readonly string $expiresJsonFile
+        private string $cacheDir,
+        private string $expiresJsonFile
     ) {}
 
     public function getCache(string $fileName): string

@@ -2,9 +2,9 @@
 
 namespace App;
 
-class Cache implements CacheI
+class Cache
 {
-    public static function convertDataFromStorageToCacheData(StorageI $storage): array
+    public static function convertDataFromStorageToCacheData(Storage $storage): array
     {
         $cache = [];
 
@@ -27,38 +27,39 @@ class Cache implements CacheI
         return json_encode($this->cache[$key] ?? '');
     }
 
-    public function set(string $key, string $data, ?int $expire = null): array
+    public function getExpires(): array
     {
-        // 0 - no update
-        // 1 - update cache and delete from expires
-        // 2 - update cache and add to expires and delete from expires
-        // 3 - add to cache and add to expires
-        // 4 - add to cache and add to expires
-        // 5 - add to cache
+        return $this->expires;
+    }
 
+    public function set(string $key, string $data, ?int $expire = null): void
+    {
         [$state, $oldExpire] = $this->defineStateAndOldExpire($expire, $key);
 
         switch ($state) {
+            // 0 - no update
+            // 1 - update cache and delete from expires
             case 1:
                 $this->deleteFromExpires($oldExpire, $key);
                 $this->cache[$key]['expire'] = null;
                 break;
+            // 2 - update cache and add to expires and delete from expires
             case 2:
                 $this->deleteFromExpires($oldExpire, $key);
                 $this->addNewExpire($expire, $key);
                 break;
+            // 3,4 - add to cache and add to expires
             case 3:
             case 4:
                 $this->addNewExpire($expire, $key);
                 break;
+            // 5 - add to cache
             case 5:
                 $this->cache[$key]['expire'] = null;
                 break;
         }
 
         $this->cache[$key]['data'] = $data;
-
-        return $this->expires;
     }
 
     public function deleteExpiredCache(array $expiredList): array

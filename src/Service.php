@@ -4,18 +4,18 @@ namespace App;
 
 use Socket;
 
-class Service
+readonly class Service
 {
     private Socket $socket;
     public function __construct(
-        private readonly int      $domain,
-        private readonly int      $type,
-        private readonly int      $protocol,
-        private readonly string   $address,
-        private readonly ?string  $port,
-        private readonly int      $maxReadLength,
-        private readonly CacheI   $cache,
-        private readonly StorageI $storage,
+        private int     $domain,
+        private int     $type,
+        private int     $protocol,
+        private string  $address,
+        private ?string $port,
+        private int     $maxReadLength,
+        private Cache   $cache,
+        private Storage $storage,
     )
     {
         extension_loaded('sockets') OR die("The sockets extension is not loaded.\n");
@@ -119,9 +119,9 @@ class Service
 
     private function set(string $key, string $data, ?int $expire): string
     {
-        $expires = $this->cache->set($key, $data, $expire);
+        $this->cache->set($key, $data, $expire);
         $this->storage->putCache($key, $this->cache->get($key));
-        $this->storage->putExpiresJSON(json_encode($expires));
+        $this->storage->putExpiresJSON(json_encode($this->cache->getExpires()));
 
         return 'OK';
     }
