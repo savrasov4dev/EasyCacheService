@@ -6,3 +6,4 @@ config.php
 easyCacheService.sock
 .idea/
 .git/
+/.phpunit.cache/

@@ -2,15 +2,33 @@
 
 namespace App;
 
+use InvalidArgumentException;
+use JsonException;
+
 class Cache
 {
-    public static function convertDataFromStorageToCacheData(Storage $storage): array
+    /**
+     * @throws JsonException
+     * @throws InvalidArgumentException
+     */
+    public static function convertDataFromStorageToCacheData(StorageInterface $storage): array
     {
         $cache = [];
 
         foreach ($storage->getAllCache() as $storageData) {
-            [$key, $cacheJSON] = $storageData;
-            ['data' => $data, 'expire' => $expire] = json_decode($cacheJSON, true);
+            [$key, $JSON] = $storageData;
+
+            $decode = json_decode($JSON, true);
+
+            if (strlen($JSON) > 0 && $decode === null) {
+                throw new JsonException("Data from $key is not JSON");
+            }
+
+            if (!(isset($decode['data']) && isset($decode['expire']))) {
+                throw new InvalidArgumentException("Not found in data: key 'data' or key 'expire'.");
+            }
+
+            ['data' => $data, 'expire' => $expire] = $decode;
 
             $cache[$key] = ['data' => $data, 'expire' => $expire];
         }
@@ -67,11 +85,13 @@ class Cache
         $deletedCacheKeyList = [];
 
         foreach ($expiredList as $expired) {
-            foreach ($this->expires[$expired] as $cacheKey) {
-                if (isset($this->cache[$cacheKey])) {
-                    unset($this->cache[$cacheKey]);
-                    $deletedCacheKeyList[] = $cacheKey;
-                    $this->deleteFromExpires($expired, $cacheKey);
+            if (isset($this->expires[$expired])) {
+                foreach ($this->expires[$expired] as $cacheKey) {
+                    if (isset($this->cache[$cacheKey])) {
+                        unset($this->cache[$cacheKey]);
+                        $deletedCacheKeyList[] = $cacheKey;
+                        $this->deleteFromExpires($expired, $cacheKey);
+                    }
                 }
             }
         }
