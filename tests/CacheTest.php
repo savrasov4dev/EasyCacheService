@@ -4,8 +4,6 @@ namespace Tests;
 
 use App\Cache;
 use App\StorageInterface;
-use InvalidArgumentException;
-use JsonException;
 use PHPUnit\Framework\TestCase;
 
 class CacheTest extends TestCase
@@ -154,23 +152,12 @@ class CacheTest extends TestCase
             }
         };
 
-        $this->expectException(JsonException::class);
+        $regex = "~^Data from ~";
+
+        $this->expectOutputRegex($regex);
         Cache::convertDataFromStorageToCacheData($stub);
 
-        $this->expectException(JsonException::class);
-        Cache::convertDataFromStorageToCacheData($stub);
-    }
-
-    public function testConvertDataFromStorageToCacheDataWhereIncorrectDataStruct()
-    {
-        $stub = new class implements StorageInterface {
-            public function getAllCache(): iterable
-            {
-                yield ["test4", json_encode(["IncorrectStruct"])];
-            }
-        };
-
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectOutputRegex($regex);
         Cache::convertDataFromStorageToCacheData($stub);
     }
 }

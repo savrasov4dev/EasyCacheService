@@ -2,15 +2,10 @@
 
 namespace App;
 
-use InvalidArgumentException;
 use JsonException;
 
 class Cache
 {
-    /**
-     * @throws JsonException
-     * @throws InvalidArgumentException
-     */
     public static function convertDataFromStorageToCacheData(StorageInterface $storage): array
     {
         $cache = [];
@@ -21,16 +16,14 @@ class Cache
             $decode = json_decode($JSON, true);
 
             if (strlen($JSON) > 0 && $decode === null) {
-                throw new JsonException("Data from $key is not JSON");
+                echo "Data from " . __DIR__ . "/$key is not JSON\n";
+                continue;
             }
 
-            if (!(isset($decode['data']) && isset($decode['expire']))) {
-                throw new InvalidArgumentException("Not found in data: key 'data' or key 'expire'.");
-            }
+            $decode['data']   = $decode['data'] ?? null;
+            $decode['expire'] = $decode['expire'] ?? null;
 
-            ['data' => $data, 'expire' => $expire] = $decode;
-
-            $cache[$key] = ['data' => $data, 'expire' => $expire];
+            $cache[$key] = $decode;
         }
 
         return $cache;
@@ -38,7 +31,8 @@ class Cache
     public function __construct(
         private array $cache,
         private array $expires
-    ) {}
+    ) {
+    }
     
     public function get(string $key): string
     {

@@ -6,12 +6,13 @@
         }
     },
     "require": {
-      "ext-sockets": "*"
+        "php": "^8.2",
+        "ext-sockets": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"
     },
     "scripts": {
-        "phpunit": "phpunit --colors=always"
+        "test": "phpunit --colors=always"
     }
 }

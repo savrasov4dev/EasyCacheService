@@ -2,7 +2,7 @@
 
 namespace App;
 
-class Storage implements StorageInterface
+readonly class Storage implements StorageInterface
 {
     public function __construct(
         private string $cacheDir,
